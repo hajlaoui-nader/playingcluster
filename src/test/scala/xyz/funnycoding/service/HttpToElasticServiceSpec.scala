@@ -34,6 +34,7 @@ class HttpToElasticServiceSpec extends WordSpec with MockFactory with Matchers {
       val response = serve(Request[IO](GET, Uri.unsafeFromString(s"/es/$index/$eventId")))
 
       response.status shouldBe Status.BadRequest
+      response.as[String].unsafeRunSync() shouldBe "stop bullshit man"
     }
   }
 

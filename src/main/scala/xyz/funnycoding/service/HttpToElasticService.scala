@@ -20,7 +20,7 @@ import org.http4s.{HttpService, MediaType, Uri}
 class HttpToElasticService extends Http4sDsl[IO] {
 
   sealed abstract class Error
-  final case class BadStringParam(string: String) extends Error
+  final case class BadStringParam(err: String) extends Error
 
   case class GetEvent(index: String, eventId: String)
 
@@ -43,7 +43,12 @@ class HttpToElasticService extends Http4sDsl[IO] {
   val service = HttpService[IO] {
     case GET -> Root / "es"/ index / eventId =>
       validateReq(GetEvent(index, eventId)).fold(
-            e => BadRequest(),
+            e => {
+              val str: String = e.map{
+                case BadStringParam(err) => err
+              }.toList.mkString(",")
+              BadRequest(str)
+            },
             ge => Ok(ge.asJson)
           )
   }

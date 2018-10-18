@@ -18,7 +18,6 @@ import org.http4s.{HttpService, MediaType, Uri}
 
 
 class HttpToElasticService extends Http4sDsl[IO] {
-  private implicit val encodeA: Encoder[GetEvent] = io.circe.generic.semiauto.deriveEncoder[GetEvent]
 
   sealed abstract class Error
   final case class BadStringParam(string: String) extends Error

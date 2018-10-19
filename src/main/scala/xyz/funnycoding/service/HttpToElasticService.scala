@@ -30,25 +30,22 @@ class HttpToElasticService extends Http4sDsl[IO] {
 
     (validIndex, validEventId).mapN(GetEvent)
   }
-  def validateStringParam(stringParam: String): ValidatedNel[Error, String] = {
-    val a = for {
+  def validateStringParam(stringParam: String): ValidatedNel[Error, String] = for {
       result <- stringParam match {
         case x if x.length >= 1 && x.length < 20 => Validated.valid(x)
         case _ => Validated.invalidNel(BadStringParam(s"stop bullshit man"))
       }
     } yield result
-    a
-  }
+
 
   val service = HttpService[IO] {
     case GET -> Root / "es"/ index / eventId =>
       validateReq(GetEvent(index, eventId)).fold(
-            e => {
-              val str: String = e.map{
+            e =>
+              BadRequest(e.map{
                 case BadStringParam(err) => err
-              }.toList.mkString(",")
-              BadRequest(str)
-            },
+              }.toList.mkString(","))
+            ,
             ge => Ok(ge.asJson)
           )
   }

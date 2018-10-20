@@ -12,7 +12,9 @@ import org.http4s.dsl.io._
 
 class HttpToElasticServiceSpec extends WordSpec with MockFactory with Matchers {
 
-  private val service = new HttpToElasticService().service
+  import xyz.funnycoding.repository.EsRepository
+
+  private val service = new HttpToElasticService(new EsRepository).service
 
   "httpToElasticService" should {
     "validate request" in {
@@ -20,7 +22,7 @@ class HttpToElasticServiceSpec extends WordSpec with MockFactory with Matchers {
       val eventId = "1"
       val response = serve(Request[IO](GET, Uri.unsafeFromString(s"/es/$index/$eventId")))
 
-      response.status shouldBe Status.Ok
+      response.status shouldBe Status.Ok  
       response.as[Json].unsafeRunSync() shouldBe json"""
         {
           "index": $index,

@@ -15,14 +15,13 @@ import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.{Location, `Content-Type`}
 import org.http4s.{HttpService, MediaType, Uri}
+import xyz.funnycoding.events.GetEvent
+import xyz.funnycoding.repository.EsRepository
 
-
-class HttpToElasticService extends Http4sDsl[IO] {
+class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
 
   sealed abstract class Error
   final case class BadStringParam(err: String) extends Error
-
-  case class GetEvent(index: String, eventId: String)
 
   def validateReq(getEvent: GetEvent): ValidatedNel[Error, GetEvent] = {
     val validIndex = validateStringParam(getEvent.index)

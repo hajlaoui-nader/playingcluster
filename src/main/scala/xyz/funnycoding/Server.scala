@@ -12,11 +12,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Server extends StreamApp[IO] with Http4sDsl[IO] {
   def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
+    import xyz.funnycoding.repository.EsRepository
     for {
       config <- Stream.eval(Config.load())
       exitCode <- BlazeBuilder[IO]
         .bindHttp(config.server.port, config.server.host)
-        .mountService(new HttpToElasticService().service, "/")
+        .mountService(new HttpToElasticService(new EsRepository).service, "/")
         .serve
     } yield exitCode
   }

@@ -2,20 +2,11 @@ package xyz.funnycoding.service
 
 import cats.data._
 import cats.effect.IO
-import org.http4s.{HttpService, Response}
-import org.http4s.dsl.Http4sDsl
 import cats.implicits._
-import io.circe.syntax._
-import io.circe.{Encoder, Json}
-import fs2.Stream
-import io.circe.generic.auto._
-import io.circe.syntax._
-import io.circe.{Decoder, Encoder}
-import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
-import org.http4s.headers.{Location, `Content-Type`}
-import org.http4s.{HttpService, MediaType, Uri}
+import org.http4s.HttpService
 import xyz.funnycoding.events.GetEvent
+import com.sksamuel.elastic4s.http.ElasticDsl._
 import xyz.funnycoding.repository.EsRepository
 
 class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
@@ -39,13 +30,17 @@ class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
 
   val service = HttpService[IO] {
     case GET -> Root / "es"/ index / eventId =>
-      validateReq(GetEvent(index, eventId)).fold(
-            e =>
-              BadRequest(e.map{
-                case BadStringParam(err) => err
-              }.toList.mkString(","))
-            ,
-            ge => Ok(ge.asJson)
-          )
+      validateReq(GetEvent(index, eventId))
+        .map(repo.fetchEventByIndexAndEventId)
+        .fold(
+          e =>
+            BadRequest(e.map{
+              case BadStringParam(err) => err
+            }.toList.mkString(",")),
+          ge => {
+            val v = ge.await
+            Ok(v.result.hits.hits.head.sourceAsString)
+          }
+        )
   }
 }

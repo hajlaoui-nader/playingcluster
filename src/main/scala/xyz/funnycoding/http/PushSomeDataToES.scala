@@ -16,7 +16,8 @@ object PushSomeDataToES extends App {
   client.execute {
     bulk(
       indexInto("myindex" / "mytype").fields("country" -> "Mongolia", "capital" -> "Ulaanbaatar"),
-      indexInto("myindex" / "mytype").fields("country" -> "Namibia", "capital" -> "Windhoek")
+      indexInto("myindex" / "mytype").fields("country" -> "Namibia", "capital" -> "Windhoek"),
+      indexInto("nader" / "mytype").fields("eventId" -> "1", "payload" -> "payload")
     ).refresh(RefreshPolicy.WaitFor)
   }.await
 

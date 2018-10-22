@@ -8,13 +8,13 @@ import scala.concurrent.Future
 import com.sksamuel.elastic4s.http.ElasticDsl._
 
 class EsRepository {
-  private implicit val client: ElasticClient = ElasticClient(ElasticProperties("http://localhost:9200"))
+  lazy val client: ElasticClient = ElasticClient(ElasticProperties("http://localhost:9200"))
 
-  def fetchEventByIndexAndEventId(getEvent: GetEvent)(implicit client: ElasticClient): Future[Response[SearchResponse]] = {
+
+  def fetchEventByIndexAndEventId(getEvent: GetEvent): Future[Response[SearchResponse]] = {
     client.execute {
       search(getEvent.index).matchQuery("eventId", getEvent.eventId)
     }
-
   }
 
 }

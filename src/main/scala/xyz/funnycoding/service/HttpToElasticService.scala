@@ -10,9 +10,6 @@ import xyz.funnycoding.events.GetEvent
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import xyz.funnycoding.repository.EsRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
-
 class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
 
   sealed abstract class Error

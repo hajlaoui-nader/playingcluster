@@ -3,11 +3,15 @@ package xyz.funnycoding.service
 import cats.data._
 import cats.effect.IO
 import cats.implicits._
+import com.sksamuel.elastic4s.http
 import org.http4s.dsl.Http4sDsl
-import org.http4s.HttpService
+import org.http4s.{HttpService, Response}
 import xyz.funnycoding.events.GetEvent
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import xyz.funnycoding.repository.EsRepository
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
 
 class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
 
@@ -31,16 +35,16 @@ class HttpToElasticService(repo: EsRepository) extends Http4sDsl[IO] {
   val service = HttpService[IO] {
     case GET -> Root / "es"/ index / eventId =>
       validateReq(GetEvent(index, eventId))
-        .map(repo.fetchEventByIndexAndEventId)
+        .map(repo.fetchEventByIndexAndEventId2)
         .fold(
           e =>
             BadRequest(e.map{
               case BadStringParam(err) => err
             }.toList.mkString(",")),
-          ge => {
-            val v = ge.await
-            Ok(v.result.hits.hits.head.sourceAsString)
-          }
+          ge =>
+            ge.flatMap(a => a.map(_.hits.hits.head.sourceAsString)
+                  .fold(BadGateway())(v => Ok(v))
+            )
         )
   }
 }
